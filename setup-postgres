@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+import argparse
+import logging
+import os
+import sys
+
+import psycopg2
+
+uptime_sql = '''
+CREATE TABLE IF NOT EXISTS uptime
+(
+    id        SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP,
+    uptime    INTERVAL
+);
+'''
+
+
+def run():
+    logger = logging.getLogger('uptime.consumer.setup-postgresql')
+
+    logger.info('Connecting to PostgreSQL')
+    try:
+        pg = psycopg2.connect(config.postgres_uri)
+        logger.info('Connection established')
+    except Exception:
+        logger.exception('Unable to connect to Postgres')
+        sys.exit(1)
+
+    try:
+        logger.info('Creating table uptime')
+        with pg:
+            with pg.cursor() as cur:
+                cur.execute(uptime_sql)
+        logger.info('Table uptime created')
+    except Exception:
+        logger.exception('Unable to create table')
+        pg.close()
+
+    pg.close()
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s %(name)s %(message)s')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--postgres', dest='postgres_uri', metavar='POSTGRES_URI',
+                        default=os.environ.get('POSTGRES_URI'), help='postgres server URI')
+
+    config = parser.parse_args()
+    run()
