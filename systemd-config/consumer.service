@@ -1,0 +1,15 @@
+[Unit]
+Description=uptime consumer
+After=syslog.target
+After=networking.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/consumer
+EnvironmentFile=/path/to/consumer.env
+User=user
+Group=user
+Restart=on-failure
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
